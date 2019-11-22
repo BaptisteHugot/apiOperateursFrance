@@ -27,7 +27,7 @@ Le projet contient 3 exemples d'utilisation distincts :
 * Un permettant de rechercher différentes informations via l'API grâce à cURL
 * Un permettant de rechercher différentes informations via la base de données
 * Un affichant différents graphiques grâce à des informations récupérées via la base de données, dont vous trouverez quelques graphiques au format .png ci-dessous :
-<img src="https://www.baptistehugot.cf/github/images/nbDeclarationsMensuellesCumul.png" width="45%"></img> <img src="https://www.baptistehugot.cf/github/images/nbDeclarationsAnnuellesCumul.png" width="45%"></img> 
+<img src="https://user-images.githubusercontent.com/19981614/69439562-839a7b80-0d47-11ea-8cce-f5be9a6e8c9b.png" width="45%"></img> <img src="https://user-images.githubusercontent.com/19981614/69439563-839a7b80-0d47-11ea-86eb-1628e1e30e74.png" width="45%"></img> 
 
 ## Versions
 [SemVer](http://semver.org/) est utilisé pour la gestion de versions. Pour connaître les versions disponibles, veuillez vous référer aux [étiquettes disponibles dans ce dépôt](https://github.com/BaptisteHugot/apiOperateursFrance/releases/).
