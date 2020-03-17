@@ -11,13 +11,25 @@ ini_set('display_errors',1);
 
 header("Content-Type:application/json");
 
-/* Recherche des données concernant un opérateur donné (via son code Arcep) */
-if(isset($_GET['OPERATEUR']) && $_GET['OPERATEUR']!=""){
-	$operateur = $_GET['OPERATEUR'];
-	$operateur = htmlspecialchars($operateur, ENT_QUOTES, 'UTF-8'); // Pour éviter une injection XSS
-	$operateur = strtoupper($operateur); // On met en majuscule les données entrées
+/**
+* Effectue des traitements sur la chaîne de caractères entrée par l'utilisateur
+* @param $string La chaîne de caractères entrée par l'utilisateur
+* @return $string La chaîne de caractères traitée
+*/
+function cleanEntry(string $string) : string{
+	$string = htmlspecialchars($string, ENT_QUOTES, 'UTF-8'); // Pour éviter une injection XSS
+	$string = strtoupper($string); // On met en majuscule les données entrées
 
+	return $string;
+}
+
+/**
+* Retourne les données concernant un opérateur donné
+* @param $operateur Le code Arcep de l'opérateur
+*/
+function jsonOperateur(string $operateur){
 	$regEx = "#^[A-Za-z0-9]{4,5}$#"; // Expression régulière d'un code Arcep
+	$operateur = cleanEntry($operateur);
 
 	if(preg_match($regEx, $operateur)){ // Si l'opérateur entré correspond à l'expression régulière
 		include('db.php'); // On se connecte à la base de données
@@ -38,7 +50,7 @@ if(isset($_GET['OPERATEUR']) && $_GET['OPERATEUR']!=""){
 			while($array = mysqli_fetch_assoc($result)){ // On stocke chaque ligne de la base de données dans une ligne d'un tableau PHP
 				$jsonData[] = $array;
 			}
-			echo stripslashes(json_encode($jsonData, JSON_UNESCAPED_UNICODE)); // On affiche le résultat au format JSON
+			echo stripslashes(json_encode($jsonData, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT)); // On affiche le résultat au format JSON
 			mysqli_free_result($result); // On libère la variable utilisée pour récupérer le résultat de la requête SQL
 			mysqli_close($connexion); // On ferme la connexion à la base de données
 		}else { // On retourne null si aucun élément n'est trouvé
@@ -53,10 +65,12 @@ if(isset($_GET['OPERATEUR']) && $_GET['OPERATEUR']!=""){
 	}
 }
 
-/* Recherche des déclarations après une date donnée */
-if(isset($_GET['DATESUP']) && $_GET['DATESUP'] != ""){
-	$date = $_GET['DATESUP'];
-	$date = htmlspecialchars($date, ENT_QUOTES, 'UTF-8');
+/**
+* Retourne la liste des déclarations après une date donnée
+* @param $date Date à partir de laquelle les données doivent être retournées
+*/
+function jsonDateSup(string $date){
+	$date = cleanEntry($date);
 
 	$regEx = "#^[0-9]{8}$#";
 
@@ -81,7 +95,7 @@ if(isset($_GET['DATESUP']) && $_GET['DATESUP'] != ""){
 			while($array = mysqli_fetch_assoc($result)){
 				$jsonData[] = $array;
 			}
-			echo stripslashes(json_encode($jsonData, JSON_UNESCAPED_UNICODE));
+			echo stripslashes(json_encode($jsonData, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
 			mysqli_free_result($result);
 			mysqli_close($connexion);
 		}else {
@@ -96,10 +110,12 @@ if(isset($_GET['DATESUP']) && $_GET['DATESUP'] != ""){
 	}
 }
 
-/* Recherche des déclarations avant une date donnée */
-if(isset($_GET['DATEINF']) && $_GET['DATEINF'] != ""){
-	$date = $_GET['DATEINF'];
-	$date = htmlspecialchars($date, ENT_QUOTES, 'UTF-8');
+/**
+* Retourne la liste des déclarations avant une date donnée
+* @param $date Date avant laquelle les données doivent être retournées
+*/
+function jsonDateInf(string $date){
+	$date = cleanEntry($date);
 
 	$regEx = "#^[0-9]{8}$#";
 
@@ -124,7 +140,7 @@ if(isset($_GET['DATEINF']) && $_GET['DATEINF'] != ""){
 			while($array = mysqli_fetch_assoc($result)){
 				$jsonData[] = $array;
 			}
-			echo stripslashes(json_encode($jsonData, JSON_UNESCAPED_UNICODE));
+			echo stripslashes(json_encode($jsonData, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
 			mysqli_free_result($result);
 			mysqli_close($connexion);
 		}else {
@@ -139,12 +155,14 @@ if(isset($_GET['DATEINF']) && $_GET['DATEINF'] != ""){
 	}
 }
 
-/* Recherche des déclarations entre deux dates données */
-if(isset($_GET['DATEENTREINF']) && $_GET['DATEENTREINF'] != "" && isset($_GET['DATEENTRESUP']) && $_GET['DATEENTRESUP'] != ""){
-	$dateInf = $_GET['DATEENTREINF'];
-	$dateSup = $_GET['DATEENTRESUP'];
-	$dateInf = htmlspecialchars($dateInf, ENT_QUOTES, 'UTF-8');
-	$dateSup = htmlspecialchars($dateSup, ENT_QUOTES, 'UTF-8');
+/**
+* Retourne la liste des déclarations entre deux dates données
+* @param $dateInf Date à partir de laquelle les données doivent être retournées
+* @param $dateSup Date avant laquelle les données doivent être retournées
+*/
+function jsonDateEntre(string $dateInf, string $dateSup){
+	$dateInf = cleanEntry($dateInf);
+	$dateSup = cleanEntry($dateSup);
 
 	$regEx = "#^[0-9]{8}$#";
 
@@ -171,7 +189,7 @@ if(isset($_GET['DATEENTREINF']) && $_GET['DATEENTREINF'] != "" && isset($_GET['D
 			while($array = mysqli_fetch_assoc($result)){
 				$jsonData[] = $array;
 			}
-			echo stripslashes(json_encode($jsonData, JSON_UNESCAPED_UNICODE));
+			echo stripslashes(json_encode($jsonData, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT));
 			mysqli_free_result($result);
 			mysqli_close($connexion);
 		}else {
@@ -198,4 +216,26 @@ function validateDate($date, $format="dmY"){
 
 	return $d && ($d->format($format) === $date) && ($d->format($format) <= $now);
 }
+
+/**
+* Fonction qui sert à traiter les différents cas d'appel de l'API
+*/
+function appelAPI(){
+	if(isset($_GET['OPERATEUR']) && $_GET['OPERATEUR']!=""){
+		$operateur = $_GET['OPERATEUR'];
+		jsonOperateur($operateur);
+	}else if(isset($_GET['DATESUP']) && $_GET['DATESUP'] != ""){
+		$date = $_GET['DATESUP'];
+		jsonDateSup($date);
+	}else if(isset($_GET['DATEINF']) && $_GET['DATEINF'] != ""){
+		$date = $_GET['DATEINF'];
+		jsonDateInf($date);
+	}else if(isset($_GET['DATEENTREINF']) && $_GET['DATEENTREINF'] != "" && isset($_GET['DATEENTRESUP']) && $_GET['DATEENTRESUP'] != ""){
+		$dateInf = $_GET['DATEENTREINF'];
+		$dateSup = $_GET['DATEENTRESUP'];
+		jsonDateEntre($dateInf, $dateSup);
+	}
+}
+
+appelAPI();
 ?>
