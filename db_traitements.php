@@ -9,32 +9,37 @@ error_reporting(E_ALL);
 ini_set('display_errors',1);
 /* Fin du code utilisé uniquement pour le débug, à supprimer en production */
 
-// On définit l'ensemble des dépendances
-include ('db.php');
+/**
+* Fonction principale du programme
+*/
+function dbTraitements(){
+	// On définit l'ensemble des dépendances
+	include ('db.php');
 
-// On définit l'ensemble des variables
-// L'URL de téléchargement du fichier en open data
-$urlOperateurs = "https://www.data.gouv.fr/fr/datasets/r/f1c8eb9a-22e7-4f67-a402-53aabe9c9f7a";
+	// On définit l'ensemble des variables
+	// L'URL de téléchargement du fichier en open data
+	$urlOperateurs = "https://www.data.gouv.fr/fr/datasets/r/f1c8eb9a-22e7-4f67-a402-53aabe9c9f7a";
 
-$tempSaveFolder = "./temp/"; // Dossier où seront mis les fichiers temporaires
-$fileSQL = "./db_traitements.sql"; // Le chemin relatif où se situe le script sql à exécuter
+	$tempSaveFolder = "./temp/"; // Dossier où seront mis les fichiers temporaires
+	$fileSQL = "./db_traitements.sql"; // Le chemin relatif où se situe le script sql à exécuter
 
-// On crée le dossier /temp/ si celui-ci n'existe pas déjà
-if(!file_exists($tempSaveFolder)){
-	mkdir($tempSaveFolder, 0777, true);
+	// On crée le dossier /temp/ si celui-ci n'existe pas déjà
+	if(!file_exists($tempSaveFolder)){
+		mkdir($tempSaveFolder, 0777, true);
+	}
+
+	// On télécharge le fichier disponible en open data
+	downloadFile($urlOperateurs, $tempSaveFolder . "MAJOPE.csv", "MAJOPE");
+
+	// On convertir le fichier téléchargé au format UTF-8
+	convertUTF8($tempSaveFolder, 'MAJOPE.csv', 'MAJOPE_utf8.csv');
+
+	// On insère les fichiers au format .csv dans la base de données et on effectue les traitements adéquats
+	insertionBDD($connexion, $fileSQL);
+
+	// On supprime le fichier
+	deleteFile($tempSaveFolder . "MAJOPE.csv", "MAJOPE");
 }
-
-// On télécharge le fichier disponible en open data
-downloadFile($urlOperateurs, $tempSaveFolder . "MAJOPE.csv", "MAJOPE");
-
-// On convertir le fichier téléchargé au format UTF-8
-convertUTF8($tempSaveFolder, 'MAJOPE.csv', 'MAJOPE_utf8.csv');
-
-// On insère les fichiers au format .csv dans la base de données et on effectue les traitements adéquats
-insertionBDD($connexion, $fileSQL);
-
-// On supprime le fichier
-deleteFile($tempSaveFolder . "MAJOPE.csv", "MAJOPE");
 
 /**
 * Téléchargement d'un fichier via son URL et enregistrement à un endroit précisé
@@ -112,7 +117,7 @@ function insertionBDD($connexion, $myfile){
 	if(mysqli_error($connexion)){
 		die(mysqli_error($connexion));
 	}
-	
+
 	$end = microtime(true);
 
 	echo "Insertion des fichiers dans la base de données réussie en " . number_format($end-$start,2) . " secondes." . nl2br("\n");
@@ -131,5 +136,7 @@ function deleteFile($myfile, $name){
 	$end = microtime(true);
 	echo "Fichier " . $myfile . " supprimé en " . number_format($end-$start,2) . " secondes." . nl2br("\n");
 }
+
+dbTraitements();
 
 ?>
